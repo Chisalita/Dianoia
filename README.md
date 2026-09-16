@@ -22,6 +22,17 @@ Named so far. None of it is built, and the names are the only thing decided.
 | **Elenchus** | ἔλεγχος, *cross-examination* | Debugger. Interrogate the program until it contradicts itself. |
 | **Dokimasia** | δοκιμασία, *vetting before office* | Test runner. Nothing ships until it is examined. |
 
+## Simulators
+
+Two, for two different jobs.
+
+**The nand2tetris Hardware Simulator** for the course chapters. Not a
+preference — the course's `.tst` scripts and `.cmp` comparison files only run
+there, and they are what says whether a chip is correct.
+
+**Logisim-evolution** for Dianoia proper. Own chips, drawn without a course
+harness, and a GUI to step through.
+
 ## Not decided yet
 
 Deliberately open. Writing a specification before understanding the problem
@@ -30,7 +41,6 @@ produces a specification that has to be thrown away.
 - word size, register count, instruction format
 - memory model — Harvard or von Neumann
 - whether Lexis is hand-written or generated from a declarative ISA description
-- which logic simulator the chips are drawn in
 - how much of the nand2tetris design to keep, and where to diverge from it
 
 ## Method
