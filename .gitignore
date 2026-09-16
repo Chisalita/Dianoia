@@ -1,0 +1,5 @@
+build/
+*.hex
+*.bin
+*.dig.bak
+.DS_Store
