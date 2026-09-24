@@ -1,0 +1,166 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/2/ALU.hdl
+/**
+ * ALU (Arithmetic Logic Unit):
+ * Computes out = one of the following functions:
+ *                0, 1, -1,
+ *                x, y, !x, !y, -x, -y,
+ *                x + 1, y + 1, x - 1, y - 1,
+ *                x + y, x - y, y - x,
+ *                x & y, x | y
+ * on the 16-bit inputs x, y,
+ * according to the input bits zx, nx, zy, ny, f, no.
+ * In addition, computes the two output bits:
+ * if (out == 0) zr = 1, else zr = 0
+ * if (out < 0)  ng = 1, else ng = 0
+ */
+// Implementation: Manipulates the x and y inputs
+// and operates on the resulting values, as follows:
+// if (zx == 1) sets x = 0        // 16-bit constant
+// if (nx == 1) sets x = !x       // bitwise not
+// if (zy == 1) sets y = 0        // 16-bit constant
+// if (ny == 1) sets y = !y       // bitwise not
+// if (f == 1)  sets out = x + y  // integer 2's complement addition
+// if (f == 0)  sets out = x & y  // bitwise and
+// if (no == 1) sets out = !out   // bitwise not
+
+CHIP ALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute (out = x + y) or (out = x & y)?
+        no; // negate the out output?
+    OUT 
+        out[16], // 16-bit output
+        zr,      // if (out == 0) equals 1, else 0
+        ng;      // if (out < 0)  equals 1, else 0
+
+    PARTS:
+
+    Not16(
+        in[0]=zx ,
+        in[1]=zx ,
+        in[2]=zx ,
+        in[3]=zx ,
+        in[4]=zx ,
+        in[5]=zx ,
+        in[6]=zx ,
+        in[7]=zx ,
+        in[8]=zx ,
+        in[9]=zx ,
+        in[10]=zx ,
+        in[11]=zx ,
+        in[12]=zx ,
+        in[13]=zx ,
+        in[14]=zx ,
+        in[15]=zx ,
+    out= notZx);
+
+    And16(a=x ,b=notZx, out=xStep1 );
+
+    Xor16(a=xStep1 , 
+        b[0]=nx ,
+        b[1]=nx ,
+        b[2]=nx ,
+        b[3]=nx ,
+        b[4]=nx ,
+        b[5]=nx ,
+        b[6]=nx ,
+        b[7]=nx ,
+        b[8]=nx ,
+        b[9]=nx ,
+        b[10]=nx ,
+        b[11]=nx ,
+        b[12]=nx ,
+        b[13]=nx ,
+        b[14]=nx ,
+        b[15]=nx ,
+     out=xStep2 );
+
+
+    Not16(
+        in[0]=zy ,
+        in[1]=zy ,
+        in[2]=zy ,
+        in[3]=zy ,
+        in[4]=zy ,
+        in[5]=zy ,
+        in[6]=zy ,
+        in[7]=zy ,
+        in[8]=zy ,
+        in[9]=zy ,
+        in[10]=zy ,
+        in[11]=zy ,
+        in[12]=zy ,
+        in[13]=zy ,
+        in[14]=zy ,
+        in[15]=zy ,
+    out= notZY);
+
+    And16(a=y , b=notZY,  out=yStep1 );
+
+    Xor16(a=yStep1 , 
+        b[0]=ny ,
+        b[1]=ny ,
+        b[2]=ny ,
+        b[3]=ny ,
+        b[4]=ny ,
+        b[5]=ny ,
+        b[6]=ny ,
+        b[7]=ny ,
+        b[8]=ny ,
+        b[9]=ny ,
+        b[10]=ny ,
+        b[11]=ny ,
+        b[12]=ny ,
+        b[13]=ny ,
+        b[14]=ny ,
+        b[15]=ny ,
+     out=yStep2 );
+     
+    Add16(a= xStep2, b=yStep2 , out=AddOut );
+
+    And16(a= xStep2, b=yStep2 , out=AndOut );
+
+    Mux16(a=AndOut , b=AddOut , sel=f , out=fOut );
+
+    Xor16(a=fOut , 
+        b[0]=no ,
+        b[1]=no ,
+        b[2]=no ,
+        b[3]=no ,
+        b[4]=no ,
+        b[5]=no ,
+        b[6]=no ,
+        b[7]=no ,
+        b[8]=no ,
+        b[9]=no ,
+        b[10]=no ,
+        b[11]=no ,
+        b[12]=no ,
+        b[13]=no ,
+        b[14]=no ,
+        b[15]=no ,
+     out=outTmp ); // needed for future operations
+    And16(a=outTmp, b=true, out=out); 
+
+
+    // The 2 flags output
+    And16(a=outTmp , b=true , out[0..7]= outLow, out[8..15]=outHigh);
+
+    // ZR
+    Or8Way(in=outHigh , out=zrFirst );
+    Or8Way(in=outLow , out=zrSecond );
+    Or(a=zrFirst , b=zrSecond , out=notZr );
+    Not(in=notZr , out=zr );
+
+    //NG
+    And16(a=outTmp , b=true , out[15]= outHighestBit, out[0..14]=outRest);
+    And(a=outHighestBit , b=true , out=ng );
+
+}
